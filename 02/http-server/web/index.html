@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>首页</title>
+  <link rel="stylesheet" href="styles/style.css"> <!-- 引入样式表 -->
+</head>
+<body>
+  <!-- 注册表单 -->
+  <form id="register-form">
+    <h2>注册</h2>
+    <input type="text" id="register-account" placeholder="账户">
+    <p id="register-account-error" class="error"></p> <!-- 显示账户错误信息 -->
+    <input type="password" id="register-password" placeholder="密码">
+    <p id="register-password-error" class="error"></p> <!-- 显示密码错误信息 -->
+    <button type="submit" id="register-submit" disabled>注册</button> <!-- 提交按钮，初始为禁用状态 -->
+  </form>
+  <p id="register-result" class="result"></p> <!-- 显示注册结果 -->
+
+  <!-- 登录表单 -->
+  <form id="login-form">
+    <h2>登录</h2>
+    <input type="text" id="login-account" placeholder="账户">
+    <p id="login-account-error" class="error"></p> <!-- 显示账户错误信息 -->
+    <input type="password" id="login-password" placeholder="密码">
+    <p id="login-password-error" class="error"></p> <!-- 显示密码错误信息 -->
+    <button type="submit" id="login-submit" disabled>登录</button> <!-- 提交按钮，初始为禁用状态 -->
+  </form>
+  <p id="login-result" class="result"></p> <!-- 显示登录结果 -->
+
+  <script>
+    // 验证账户的函数
+    function validateaccount(account) {
+      if (!account) {
+        return '用户名不能为空';
+      }
+      if (account.length < 6 || account.length > 12) {
+        return '用户名长度必须在 6 到 12 之间';
+      }
+      return null;
+    }
+
+    // 验证密码的函数
+    function validatePassword(password) {
+      if (!password) {
+        return '密码不能为空';
+      }
+      if (password.length < 6 || password.length > 12) {
+        return '密码长度必须在 6 到 12 之间';
+      }
+      if (!/\d/.test(password) || !/[a-zA-Z]/.test(password)) {
+        return '密码必须包含数字和字母';
+      }
+      return null;
+    }
+
+    // 处理输入的函数
+    function handleInput(inputId1, inputId2, errorId1, errorId2, validateFunction1, validateFunction2, submitButtonId) {
+      // 获取元素
+      const inputElement1 = document.getElementById(inputId1);
+      const inputElement2 = document.getElementById(inputId2);
+      const errorElement1 = document.getElementById(errorId1);
+      const errorElement2 = document.getElementById(errorId2);
+      const submitButton = document.getElementById(submitButtonId);
+
+      // 验证输入
+      function validateInputs() {
+        const validationError1 = validateFunction1(inputElement1.value);
+        const validationError2 = validateFunction2(inputElement2.value);
+        const validationError3 = inputElement1.value === inputElement2.value ? '账号和密码不能相同' : null;
+        errorElement1.innerText = validationError1 || '';
+        errorElement1.style.color = validationError1 ? 'red' : '';
+        errorElement2.innerText = validationError2 || validationError3 || '';
+        errorElement2.style.color = validationError2 || validationError3 ? 'red' : '';
+        submitButton.disabled = !!(validationError1 || validationError2 || validationError3);
+      }
+
+      // 添加事件监听
+      inputElement1.addEventListener('input', validateInputs);
+      inputElement2.addEventListener('input', validateInputs);
+    }
+
+    // 处理注册和登录输入
+    handleInput('register-account', 'register-password', 'register-account-error', 'register-password-error', validateaccount, validatePassword, 'register-submit');
+    handleInput('login-account', 'login-password', 'login-account-error', 'login-password-error', validateaccount, validatePassword, 'login-submit');
+
+    // 提交表单的函数
+    async function submitForm(account, password, apiEndpoint) {
+      const response = await fetch(apiEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ account, password })
+      });
+      const data = await response.json();
+      return { data, ok: response.ok };
+    }
+
+    // 显示结果的函数
+    function displayResult(resultElement, { data, ok }) {
+      setTimeout(() => {
+        resultElement.innerText = data.stat;
+        if (ok) {
+          resultElement.classList.add('success');
+        } else {
+          resultElement.classList.remove('success');
+        }
+      }, 100);
+    }
+
+    // 处理表单提交的函数
+    function handleFormSubmit(formId, resultId, apiEndpoint) {
+      document.getElementById(formId).addEventListener('submit', async event => {
+        event.preventDefault();
+        const resultElement = document.getElementById(resultId);
+        // 清空上次的结果
+        resultElement.innerText = '';
+        resultElement.style.color = '';
+        const prefix = formId.split('-')[0];
+        const account = document.getElementById(`${prefix}-account`).value;
+        const password = document.getElementById(`${prefix}-password`).value;
+        const result = await submitForm(account, password, apiEndpoint);
+        displayResult(resultElement, result);
+      });
+    }
+
+    // 处理注册和登录表单提交
+    handleFormSubmit('register-form', 'register-result', 'http://127.0.0.1:3270/api/user/register');
+    handleFormSubmit('login-form', 'login-result', 'http://127.0.0.1:3270/api/user/login');
+  </script>
+</body>
+</html>

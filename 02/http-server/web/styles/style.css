@@ -1,0 +1,12 @@
+body {
+  width: 600px;
+  margin: 50px auto;
+}
+
+.result {
+  color: red;
+}
+
+.result.success {
+  color: green;
+}
