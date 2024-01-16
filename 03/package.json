@@ -1,0 +1,22 @@
+{
+  "scripts": {
+    "build": "tsc",
+    "start": "npm run build && node src/index.js"
+  },
+  "dependencies": {
+    "@types/koa-static": "^4.0.4",
+    "koa": "^2.15.0",
+    "koa-body": "^6.0.1",
+    "koa-router": "^12.0.1",
+    "koa-static": "^5.0.0",
+    "mysql2": "^3.7.0",
+    "uuid": "^9.0.1",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/koa": "^2.14.0",
+    "@types/koa-router": "^7.4.8",
+    "@types/node": "^20.11.4",
+    "@types/uuid": "^9.0.7"
+  }
+}

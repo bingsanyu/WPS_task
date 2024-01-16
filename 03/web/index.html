@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Excel to MySQL</title>
+    <style>
+        #table-content {
+            border-collapse: collapse;  /* 确保边框之间没有空隙 */
+        }
+        #table-content th, #table-content td {
+            border: 1px solid black;  /* 在每个单元格周围添加一个边框 */
+            padding: 5px;  /* 在单元格内部添加一些空间，使内容不会贴近边框 */
+        }
+    </style>
+</head>
+<body onload="fetchTables()">  <!-- 页面加载完成后，调用fetchTables函数获取所有表名 -->
+    <form id="operation-form">
+        <select id="table-select">  <!-- 下拉菜单，用于选择一个表 -->
+            <option value="">选择一个表格</option>
+        </select>
+    
+        <div id="operation-fields" style="display: none;">  <!-- 上传和下载操作的区域，初始状态为隐藏 -->
+            <label for="operation-select">是要上传还是下载模板？</label>
+            <select id="operation-select">  <!-- 下拉菜单，用于选择操作类型：上传或下载 -->
+                <option value="">请选择</option>
+                <option value="upload">上传</option>
+                <option value="download">下载模板</option>
+            </select>
+    
+            <div id="upload-fields" style="display: none;">  <!-- 上传操作的区域，初始状态为隐藏 -->
+                <input type="file" id="file" required>  <!-- 文件输入框，用于选择要上传的文件 -->
+                <button type="submit"  onclick="upload(event)">上传</button>  <!-- 上传按钮，点击后调用upload函数上传文件 -->
+            </div>
+    
+            <div id="download-fields" style="display: none;">  <!-- 下载操作的区域，初始状态为隐藏 -->
+                <button type="submit"  onclick="download(event)">下载模板</button>  <!-- 下载按钮，点击后调用download函数下载模板 -->
+            </div>
+            <table id="table-content"></table>  <!-- 表格，用于显示选中表的内容 -->
+        </div>
+    </form>
+    
+    <script>
+        // 当选择了一个表后，显示操作区域，并获取表的内容
+        document.getElementById('table-select').addEventListener('change', function () {
+            var operationFields = document.getElementById('operation-fields');
+            var uploadFields = document.getElementById('upload-fields');
+            var downloadFields = document.getElementById('download-fields');
+    
+            if (this.value !== "") {
+                operationFields.style.display = 'block';
+                fetchTableContent(this.value);
+            } else {
+                operationFields.style.display = 'none';
+                uploadFields.style.display = 'none';
+                downloadFields.style.display = 'none';
+            }
+        });
+    
+        // 当选择了一个操作后，显示对应的操作区域
+        document.getElementById('operation-select').addEventListener('change', function () {
+            var uploadFields = document.getElementById('upload-fields');
+            var downloadFields = document.getElementById('download-fields');
+    
+            if (this.value === 'upload') {
+                uploadFields.style.display = 'block';
+                downloadFields.style.display = 'none';
+            } else if (this.value === 'download') {
+                uploadFields.style.display = 'none';
+                downloadFields.style.display = 'block';
+            } else {
+                uploadFields.style.display = 'none';
+                downloadFields.style.display = 'none';
+            }
+        });
+        
+        // 上传文件的函数
+        async function upload(event) {
+            event.preventDefault();
+            const selectedTable = document.getElementById('table-select').value;
+            const fileInput = document.getElementById('file');
+            if (fileInput.files.length === 0) {
+                alert('请先选择一个文件。');
+                return;
+            }
+            try {
+                console.warn(fileInput.files[0])
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+                formData.append('table', selectedTable);
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                if (!response.ok) {
+                    throw new Error('上传失败，上传的文件和所选表格不匹配');
+                }
+                const data = await response.json();
+                // 显示上传成功的消息和随机值
+                alert('上传成功，随机值是：' + data.randomValue);
+                fetchTableContent(selectedTable);
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+
+        // 下载模板的函数
+        function download(event) {
+            var selectedTable = document.getElementById('table-select').value;
+            fetch(`/download?table=${encodeURIComponent(selectedTable)}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('下载失败');
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                var url = window.URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = `${selectedTable}.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            })
+            .catch(error => {
+                alert(error.message);
+            });
+            event.preventDefault();
+        }
+
+        // 获取所有的表名并添加到下拉菜单
+        function fetchTables() {
+            fetch('/tables')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('服务器错误');
+                    }
+                    return response.json();
+                })
+                .then(tables => {
+                    const select = document.getElementById('table-select');
+                    for (const table of tables) {
+                        const option = document.createElement('option');
+                        option.value = table;
+                        option.textContent = table;
+                        select.appendChild(option);
+                    }
+                })
+                .catch(error => {
+                    showError(error.message);
+                });
+        }
+        // 获取表的内容并显示
+        function fetchTableContent(tableName) {
+            fetch('/table?table=' + encodeURIComponent(tableName))
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('获取表内容失败');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const table = document.getElementById('table-content');
+                    // 清空表格
+                    table.innerHTML = '';
+                    // 添加表头到表格
+                    const thead = document.createElement('thead');
+                    const headerRow = document.createElement('tr');
+                    for (const header of data.headers) {
+                        const th = document.createElement('th');
+                        th.textContent = header;
+                        headerRow.appendChild(th);
+                    }
+                    thead.appendChild(headerRow);
+                    table.appendChild(thead);
+                    // 添加数据到表格
+                    const tbody = document.createElement('tbody');
+                    for (const row of data.data) {
+                        const tr = document.createElement('tr');
+                        for (const cell of row) {
+                            const td = document.createElement('td');
+                            td.textContent = cell;
+                            tr.appendChild(td);
+                        }
+                        tbody.appendChild(tr);
+                    }
+                    table.appendChild(tbody);
+                })
+                .catch(error => {
+                    alert(error.message);
+                });
+        }
+    </script>
+</body>
+</html>
