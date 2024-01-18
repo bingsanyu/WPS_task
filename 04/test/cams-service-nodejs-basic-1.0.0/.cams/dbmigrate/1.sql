@@ -1,0 +1,8 @@
+-- CREATE TABLE `account` (
+--     `created_at` BIGINT(20) NOT NULL COMMENT '创建时间',
+--     `updated_at` BIGINT(20) NOT NULL COMMENT '更新时间',
+--     `userid` BIGINT(20) NOT NULL COMMENT '自增id',
+--     `username` VARCHAR(255) NOT NULL COMMENT '用户名',
+--     PRIMARY KEY (`userid`),
+--     UNIQUE KEY `username` (`username`)
+-- ) AUTO_INCREMENT=1 CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ENGINE=InnoDB;

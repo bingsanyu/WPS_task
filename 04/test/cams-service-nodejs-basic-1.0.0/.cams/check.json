@@ -1,0 +1,11 @@
+{
+    "templateTag": "cams-service-nodejs-basic-1.0.0",
+    "sdkName": "nodejs-service",
+    "sdkVersion": "1.0.0",
+    "branch": "v7_service_template",
+    "buildCommit": "90bfdfe",
+    "buildTime": "2023-10-07-09:46:40",
+    "source": "cams-service-nodejs-basic-1.0.0.zip",
+    "hash": "38f51c6d0efee5b0d33e45f815a6e5ab",
+    "downloadUrl": ""
+}

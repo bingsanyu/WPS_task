@@ -1,0 +1,5 @@
+{
+    "type": "service",
+    "buildmode": "service-basic", 
+    "organization": "single"
+}
