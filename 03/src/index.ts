@@ -6,6 +6,7 @@ import Koa from 'koa';
 import Router from 'koa-router';
 import koaBody from 'koa-body';
 import serve from 'koa-static';
+import dotenv from 'dotenv'
 
 import { v4 as uuidv4 } from 'uuid';
 
@@ -23,12 +24,14 @@ const _NULL = 'NULL_GuoYanbing';
 app.use(serve(path.resolve(process.cwd(), './web')));
 app.use(router.routes()).use(router.allowedMethods());
 
+dotenv.config()
+
 const pool = createPool({
-  host: '192.168.137.234',
-  port: 3306,
-  user: 'root',
-  password: '123',
-  database: 'test'
+  host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT),
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME
 });
 
 // 执行 SQL 查询的函数，返回 RowDataPacket 数组
